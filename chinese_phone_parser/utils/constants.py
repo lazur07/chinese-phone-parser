@@ -1,4 +1,4 @@
- """
+"""
 Constants used in the Chinese phone number parser.
 """
 

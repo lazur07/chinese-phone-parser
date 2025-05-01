@@ -1,4 +1,4 @@
- """
+"""
 Functions for validating and categorizing Chinese phone numbers.
 """
 
@@ -6,9 +6,8 @@ import re
 from typing import Optional, Tuple, Union
 
 
-def validate_phone(phone: str) -> Tuple[bool, str]:
-    """
-    Validate if a string is a valid Chinese phone number.
+def is_valid_phone_number(phone: str) -> bool:
+    """Validate if a string is a valid Chinese phone number.
     
     Parameters
     ----------
@@ -17,48 +16,48 @@ def validate_phone(phone: str) -> Tuple[bool, str]:
         
     Returns
     -------
-    tuple
-        (is_valid, error_message)
+    bool
+        True if valid, False otherwise
     """
     if not phone:
-        return False, "Phone number is empty"
-        
+        return False
+    
     # Remove all non-digit characters
     digits_only = re.sub(r'\D', '', phone)
     
     # Check if it's a mobile number
     if re.match(r'^1\d{10}$', digits_only):
-        return True, ""
-        
+        return True
+    
     # Check if it's a landline with area code
     if re.match(r'^0\d{2,3}\d{7,8}$', digits_only):
-        return True, ""
-        
+        return True
+    
     # Check if it's a toll-free number
     if re.match(r'^[48]00\d{7}$', digits_only):
-        return True, ""
-        
+        return True
+    
     # Check international format with +86
     if re.match(r'^\+?86\d{10,12}$', digits_only) or re.match(r'^0086\d{10,12}$', digits_only):
-        return True, ""
-        
+        return True
+    
     # If it doesn't match any known format
-    return False, "Invalid phone number format"
+    return False
 
 
 def categorize_phone_format(phone: Optional[str]) -> str:
     """
-    Categorize a phone number into different format types.
-    
-    Parameters
-    ----------
-    phone : str or None
-        The phone number to categorize
+        Categorize a phone number into different format types.
         
-    Returns
-    -------
-    str
-        The category of the phone number
+        Parameters
+        ----------
+        phone : str or None
+            The phone number to categorize
+            
+        Returns
+        -------
+        str
+            The category of the phone number
     """
     if not phone:
         return 'Missing'
@@ -110,8 +109,7 @@ def categorize_phone_format(phone: Optional[str]) -> str:
 
 
 def is_mobile_number(phone: str) -> bool:
-    """
-    Check if a phone number is a Chinese mobile number.
+    """Check if a phone number is a Chinese mobile number.
     
     Parameters
     ----------
@@ -125,21 +123,20 @@ def is_mobile_number(phone: str) -> bool:
     """
     if not phone:
         return False
-        
+    
     # Remove all non-digit characters
     digits_only = re.sub(r'\D', '', phone)
     
     # Check international prefix
     if digits_only.startswith('86'):
         digits_only = digits_only[2:]
-        
+    
     # Check if it starts with 1 and has 11 digits
     return bool(re.match(r'^1\d{10}$', digits_only))
 
 
 def is_landline_number(phone: str) -> bool:
-    """
-    Check if a phone number is a Chinese landline number.
+    """Check if a phone number is a Chinese landline number.
     
     Parameters
     ----------
@@ -153,13 +150,13 @@ def is_landline_number(phone: str) -> bool:
     """
     if not phone:
         return False
-        
+    
     # Remove all non-digit characters
     digits_only = re.sub(r'\D', '', phone)
     
     # Remove international prefix if present
     if digits_only.startswith('86'):
         digits_only = digits_only[2:]
-        
+    
     # Check for landline pattern (area code + 7-8 digits)
     return bool(re.match(r'^0\d{2,3}\d{7,8}$', digits_only))

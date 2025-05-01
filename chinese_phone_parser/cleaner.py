@@ -1,4 +1,4 @@
- """
+"""
 Functions for cleaning and normalizing Chinese phone numbers.
 """
 
@@ -29,6 +29,10 @@ def clean_phone_number(phone: Union[str, int, float]) -> Optional[str]:
     # Convert to string if not already
     phone_str = str(phone).strip()
     
+    # Handle empty strings
+    if not phone_str:
+        return None
+    
     # Remove any non-essential whitespace
     phone_str = re.sub(r'\s+', ' ', phone_str)
     
@@ -40,7 +44,7 @@ def clean_phone_number(phone: Union[str, int, float]) -> Optional[str]:
     elif '/' in phone_str:
         phone_str = phone_str.split('/')[0].strip()
     
-    return phone_str
+    return phone_str if phone_str else None
 
 
 def normalize_phone(phone: Optional[str]) -> Optional[str]:
@@ -80,65 +84,44 @@ def normalize_phone(phone: Optional[str]) -> Optional[str]:
 
 
 def convert_to_standard_format(phone: str) -> str:
-    """
-    Convert a normalized phone number to a standard display format.
+    """Convert a phone number to a standardized format.
     
     Parameters
     ----------
     phone : str
-        The normalized phone number
+        The phone number to format
         
     Returns
     -------
     str
-        The phone number in standard display format
+        The formatted phone number
     """
     if not phone:
-        return ''
-        
+        return ""
+    
+    # Remove any non-digit characters except +
+    cleaned = re.sub(r'[^\d+]', '', phone)
+    
     # Handle international format with +86
-    if phone.startswith('+86'):
-        # +86 + area code + number
-        if len(phone) > 11 and not phone[3:].startswith('1'):
-            # Try to determine area code length (2-4 digits)
-            area_code_length = 2
-            area_code_candidate = phone[3:3+area_code_length]
-            
-            if area_code_candidate.startswith('0'):
-                if area_code_candidate == '01':
-                    area_code_length = 3  # Beijing (010)
-                elif area_code_candidate in ['02', '03', '04', '05', '07', '08', '09']:
-                    area_code_length = 3  # Other major cities
-                else:
-                    area_code_length = 4  # Smaller cities
-                    
-            return f"+86 {phone[3:3+area_code_length]} {phone[3+area_code_length:]}"
-        
-        # Mobile number
-        if len(phone) == 14 and phone[3:].startswith('1'):
-            return f"+86 {phone[3:6]} {phone[6:10]} {phone[10:14]}"
-            
-        return phone
+    if cleaned.startswith('+86'):
+        base = cleaned[3:]  # Remove +86
+        if base.startswith('1'):  # Mobile
+            return f"+86 {base[:3]} {base[3:7]} {base[7:]}"
+        else:  # Landline
+            area_code = base[:3] if base[:3] in ['010', '020', '021', '022', '023', '024', '025', '027', '028', '029'] else base[:4]
+            return f"+86 {area_code} {base[len(area_code):]}"
     
-    # Handle domestic format
-    if phone.startswith('0'):
-        # Landline
-        if not phone[1:].startswith('1'):
-            # Determine area code length
-            if phone.startswith('010') or phone.startswith('020'):
-                return f"{phone[:3]}-{phone[3:]}"
-            elif phone[:2] in ['01', '02', '03', '04', '05', '07', '08', '09']:
-                return f"{phone[:4]}-{phone[4:]}"
-            else:
-                return f"{phone[:5]}-{phone[5:]}"
+    # Handle mobile numbers
+    if cleaned.startswith('1') and len(cleaned) == 11:
+        return f"{cleaned[:3]} {cleaned[3:7]} {cleaned[7:]}"
     
-    # Mobile number
-    if phone.startswith('1') and len(phone) == 11:
-        return f"{phone[:3]} {phone[3:7]} {phone[7:11]}"
-        
-    # Toll-free number
-    if phone.startswith('400') or phone.startswith('800'):
-        return f"{phone[:3]}-{phone[3:6]}-{phone[6:]}"
-        
-    # Default: return as is
-    return phone
+    # Handle toll-free numbers
+    if cleaned.startswith(('400', '800')):
+        return f"{cleaned[:3]}-{cleaned[3:6]}-{cleaned[6:]}"
+    
+    # Handle landline numbers
+    if cleaned.startswith('0'):
+        area_code = cleaned[:3] if cleaned[:3] in ['010', '020', '021', '022', '023', '024', '025', '027', '028', '029'] else cleaned[:4]
+        return f"{area_code}-{cleaned[len(area_code):]}"
+    
+    return cleaned

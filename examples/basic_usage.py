@@ -3,11 +3,11 @@ Basic usage examples for the Chinese phone number parser.
 """
 
 import pandas as pd
-from cn_phone_parser import PhoneParser
-from cn_phone_parser.cleaner import clean_phone_number, normalize_phone
-from cn_phone_parser.extractor import extract_area_code, extract_phone_numbers
-from cn_phone_parser.validator import categorize_phone_format
-from cn_phone_parser.utils.helpers import analyze_phone_dataset, get_phone_stats, plot_phone_formats
+from chinese_phone_parser import PhoneParser
+from chinese_phone_parser.cleaner import clean_phone_number, normalize_phone
+from chinese_phone_parser.extractor import extract_area_code, extract_phone_numbers
+from chinese_phone_parser.validator import categorize_phone_format
+from chinese_phone_parser.utils.helpers import analyze_phone_dataset, get_phone_stats, plot_phone_formats
 
 def example_single_phone():
     """Example of parsing a single phone number."""

@@ -1,5 +1,5 @@
- """
-Example script for analyzing hotel phone numbers using the cn_phone_parser package.
+"""
+Example script for analyzing hotel phone numbers using the chinese_phone_parser package.
 """
 
 import pandas as pd
@@ -8,14 +8,14 @@ import plotly.graph_objects as go
 import re
 from collections import Counter
 
-from cn_phone_parser import PhoneParser
-from cn_phone_parser.utils.helpers import (
+from chinese_phone_parser import PhoneParser
+from chinese_phone_parser.utils.helpers import (
     analyze_phone_dataset,
     get_phone_stats,
     plot_phone_formats,
     plot_area_code_map
 )
-from cn_phone_parser.utils.constants import PLOT_COLORS
+from chinese_phone_parser.utils.constants import PLOT_COLORS
 
 
 def main(file_path):

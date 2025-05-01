@@ -1,267 +1,205 @@
-# Chinese Phone Number Parser - Usage Guide
+# Chinese Phone Number Parser Usage Guide
 
-This guide provides detailed instructions for using the `cn_phone_parser` package to clean, normalize, and analyze Chinese phone numbers.
-
-## Table of Contents
-
-- [Chinese Phone Number Parser - Usage Guide](#chinese-phone-number-parser---usage-guide)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Basic Usage](#basic-usage)
-  - [Working with Single Phone Numbers](#working-with-single-phone-numbers)
-    - [Parse a Phone Number](#parse-a-phone-number)
-    - [Clean and Normalize](#clean-and-normalize)
-    - [Extract Components](#extract-components)
-    - [Validate and Categorize](#validate-and-categorize)
-  - [Working with DataFrames](#working-with-dataframes)
-  - [Analyzing Phone Numbers](#analyzing-phone-numbers)
-  - [Visualizing Phone Data](#visualizing-phone-data)
-  - [Handling Specific Phone Formats](#handling-specific-phone-formats)
-    - [Mobile Numbers](#mobile-numbers)
-    - [Landline Numbers](#landline-numbers)
-    - [Numbers with Extensions](#numbers-with-extensions)
-    - [Multiple Numbers in One String](#multiple-numbers-in-one-string)
-  - [API Reference](#api-reference)
-    - [Main Classes](#main-classes)
-    - [Cleaner Module](#cleaner-module)
-    - [Extractor Module](#extractor-module)
-    - [Validator Module](#validator-module)
-    - [Helper Functions](#helper-functions)
-    - [Data](#data)
+This document provides detailed usage instructions for the Chinese Phone Number Parser package.
 
 ## Installation
 
-Install the package using pip:
-
 ```bash
-pip install cn-phone-parser
+pip install chinese-phone-parser
 ```
 
 ## Basic Usage
 
-Import the required modules:
+### Parsing a Single Phone Number
 
 ```python
-from cn_phone_parser import PhoneParser
-from cn_phone_parser.cleaner import clean_phone_number, normalize_phone
-from cn_phone_parser.extractor import extract_area_code, extract_phone_numbers
-from cn_phone_parser.validator import categorize_phone_format
-from cn_phone_parser.utils.helpers import analyze_phone_dataset
-```
+from chinese_phone_parser import PhoneParser
 
-## Working with Single Phone Numbers
-
-### Parse a Phone Number
-
-Use the `PhoneParser` class to get detailed information about a phone number:
-
-```python
+# Create a parser instance
 parser = PhoneParser()
+
+# Parse a phone number
 result = parser.parse("+86-010-12345678")
 print(result)
-# Output:
-# {
-#     'original': '+86-010-12345678',
-#     'normalized': '+8601012345678',
-#     'type': 'International (+86)',
-#     'area_code': '010',
-#     'city': 'Beijing'
-# }
 ```
 
-### Clean and Normalize
-
-Clean and normalize phone numbers:
-
-```python
-# Clean a phone number (handle multiple numbers, etc.)
-cleaned = clean_phone_number("010-12345678, 13812345678")
-print(cleaned)  # Output: 010-12345678
-
-# Normalize a phone number (remove non-digits)
-normalized = normalize_phone("010-12345678")
-print(normalized)  # Output: 01012345678
+Output:
+```
+{
+    'original': '+86-010-12345678',
+    'normalized': '+8601012345678',
+    'type': 'landline',
+    'area_code': '010',
+    'city': 'Beijing'
+}
 ```
 
-### Extract Components
+### Individual Functions
 
-Extract components from phone numbers:
+You can also use the individual functions directly:
 
 ```python
+from chinese_phone_parser.cleaner import clean_phone_number, normalize_phone
+from chinese_phone_parser.extractor import extract_area_code, extract_phone_numbers
+from chinese_phone_parser.validator import is_valid_phone_number, categorize_phone_format
+
+# Clean a phone number
+cleaned = clean_phone_number("+86 (010) 1234-5678")
+print(cleaned)  # +86010-12345678
+
+# Normalize a phone number
+normalized = normalize_phone(cleaned)
+print(normalized)  # +8601012345678
+
 # Extract area code
-area_code = extract_area_code("010-12345678")
-print(area_code)  # Output: 010
+area_code = extract_area_code(normalized)
+print(area_code)  # 010
 
-# Extract extension
-from cn_phone_parser.extractor import extract_extension
-extension_info = extract_extension("010-12345678 转 123")
-print(extension_info)  # Output: {'main': '010-12345678', 'extension': '123'}
+# Check if valid
+is_valid = is_valid_phone_number(normalized)
+print(is_valid)  # True
+
+# Categorize format
+format_type = categorize_phone_format(normalized)
+print(format_type)  # landline
 
 # Extract multiple phone numbers from text
-phone_numbers = extract_phone_numbers("Contact us at 010-12345678 or 13812345678")
-print(phone_numbers)  # Output: ['010-12345678', '13812345678']
+text = "Contact us at +86-010-12345678 or 13812345678"
+numbers = extract_phone_numbers(text)
+print(numbers)  # ['+86-010-12345678', '13812345678']
 ```
 
-### Validate and Categorize
+## Advanced Features
 
-Validate and categorize phone numbers:
-
-```python
-from cn_phone_parser.validator import validate_phone, categorize_phone_format
-
-# Validate a phone number
-is_valid, error_msg = validate_phone("13812345678")
-print(is_valid, error_msg)  # Output: True, ""
-
-# Categorize a phone number
-format_category = categorize_phone_format("010-12345678")
-print(format_category)  # Output: Domestic (0XX)
-```
-
-## Working with DataFrames
-
-Analyze a DataFrame containing phone numbers:
+### Analyze a Dataset with Phone Numbers
 
 ```python
 import pandas as pd
-from cn_phone_parser.utils.helpers import analyze_phone_dataset
+from chinese_phone_parser.utils.helpers import analyze_phone_dataset
 
-# Create a sample DataFrame
+# Sample dataframe with phone numbers
 df = pd.DataFrame({
-    'id': [1, 2, 3],
-    'phone': ['+86-010-12345678', '13812345678', '0755-87654321']
+    'id': [1, 2, 3, 4],
+    'name': ['Hotel A', 'Hotel B', 'Hotel C', 'Hotel D'],
+    'phone': ['+86-010-12345678', '0755-87654321', '13812345678', '400-123-4567']
 })
 
-# Process the DataFrame
-result_df = analyze_phone_dataset(df, 'phone')
-print(result_df)
+# Analyze the dataset
+result_df = analyze_phone_dataset(df, phone_column='phone')
+print(result_df.head())
 ```
 
-The resulting DataFrame will have additional columns:
-- `clean_phone`: Cleaned phone number
-- `normalized_phone`: Normalized phone number
-- `area_code`: Extracted area code
-- `city`: City corresponding to the area code
-- `phone_format`: Format category of the phone number
+The output will include additional columns with phone analysis:
+- `phone_cleaned`: Cleaned phone number
+- `phone_normalized`: Normalized phone number
+- `phone_type`: Type of phone (mobile, landline, toll-free)
+- `phone_area_code`: Area code (if applicable)
+- `phone_city`: City corresponding to area code
+- `phone_is_valid`: Validity flag
 
-## Analyzing Phone Numbers
-
-Get statistics about phone numbers in a dataset:
+### Get Comprehensive Statistics
 
 ```python
-from cn_phone_parser.utils.helpers import get_phone_stats
+from chinese_phone_parser.utils.helpers import get_phone_stats
 
-# Get phone statistics
-stats = get_phone_stats(df, 'phone')
+# Get statistics about phone numbers in a dataset
+stats = get_phone_stats(df, phone_column='phone')
 print(stats)
 ```
 
-The stats dictionary contains:
-- `total_count`: Total number of phone numbers
-- `unique_count`: Number of unique phone numbers
-- `unique_percentage`: Percentage of unique phone numbers
-- `format_counts`: Counts of different phone formats
-- `area_code_counts`: Counts of different area codes
-- `city_counts`: Counts of different cities
-- `patterns`: Detailed pattern analysis
-
-## Visualizing Phone Data
-
-Create visualizations of phone number data:
+### Analyze Phone Patterns
 
 ```python
-from cn_phone_parser.utils.helpers import plot_phone_formats, plot_area_code_map
+from chinese_phone_parser.utils.helpers import analyze_phone_patterns
 
-# Plot phone formats
-format_fig = plot_phone_formats(df, 'phone')
-format_fig.write_html("phone_formats.html")
+# Sample list of phone numbers
+phone_list = [
+    '+86-010-12345678',
+    '0755-87654321',
+    '13812345678',
+    '400-123-4567',
+    '010-12345678-123'
+]
 
-# Plot area code distribution
-area_fig = plot_area_code_map(df, 'phone', top_n=10)
-area_fig.write_html("area_codes.html")
+patterns = analyze_phone_patterns(phone_list)
+print(patterns)
 ```
 
-## Handling Specific Phone Formats
-
-### Mobile Numbers
-
-Check if a number is a mobile number:
+### Visualization
 
 ```python
-from cn_phone_parser.validator import is_mobile_number
+from chinese_phone_parser.utils.helpers import plot_phone_formats, plot_area_code_map
 
-is_mobile = is_mobile_number("13812345678")
-print(is_mobile)  # Output: True
+# Create visualization of phone formats
+fig1 = plot_phone_formats(df, phone_column='phone')
+fig1.show()
+
+# Create map visualization of area codes
+fig2 = plot_area_code_map(df, phone_column='phone', top_n=10)
+fig2.show()
 ```
+
+## Supported Phone Number Formats
+
+The package supports various Chinese phone number formats:
+
+### Mobile Numbers (11 digits)
+- Standard: `13812345678`
+- International: `+86 138 1234 5678`
+- With prefix: `0086-13812345678`
 
 ### Landline Numbers
+- Local: `010-12345678`
+- With area code: `0755-87654321`
+- International: `+86 10 1234 5678`
 
-Check if a number is a landline number:
+### Toll-Free Numbers (10 digits)
+- 400 numbers: `400-123-4567`
+- 800 numbers: `800-123-4567`
+
+### Special Formats
+- With extensions: 
+  - `010-12345678-123`
+  - `0755-87654321 转 456`
+  - `010-12345678 ext 789`
+  - `010-12345678 分机 321`
+- Multiple numbers:
+  - `010-12345678 / 13812345678`
+  - `0755-87654321, 400-123-4567`
+- Concatenated numbers without delimiters
+- Missing area codes
+- Service numbers (110, 12345, etc.)
+
+## Error Handling
+
+The package is designed to handle various edge cases:
 
 ```python
-from cn_phone_parser.validator import is_landline_number
+from chinese_phone_parser import PhoneParser
 
-is_landline = is_landline_number("010-12345678")
-print(is_landline)  # Output: True
+parser = PhoneParser()
+
+# Handling None or empty string
+result1 = parser.parse(None)
+print(result1)  # None
+
+# Handling invalid format
+result2 = parser.parse("not-a-phone-number")
+print(result2)  # Returns basic structure but with validation flags indicating issues
 ```
 
-### Numbers with Extensions
+## Performance Considerations
 
-Extract the main number and extension:
+For large datasets, consider using batch processing:
 
 ```python
-from cn_phone_parser.extractor import extract_extension
+import pandas as pd
+from chinese_phone_parser.utils.helpers import analyze_phone_dataset
 
-result = extract_extension("010-12345678 转 123")
-print(result)  # Output: {'main': '010-12345678', 'extension': '123'}
-```
-
-### Multiple Numbers in One String
-
-Extract all phone numbers from a string:
-
-```python
-from cn_phone_parser.extractor import extract_phone_numbers
-
-numbers = extract_phone_numbers("Contact us at 010-12345678 or 13812345678")
-print(numbers)  # Output: ['010-12345678', '13812345678']
-```
-
-## API Reference
-
-### Main Classes
-
-- `PhoneParser`: Main class for parsing phone numbers
-
-### Cleaner Module
-
-- `clean_phone_number(phone)`: Clean a phone number string
-- `normalize_phone(phone)`: Normalize a phone number by removing non-digits
-- `convert_to_standard_format(phone)`: Convert a normalized phone number to a standard display format
-
-### Extractor Module
-
-- `extract_area_code(phone)`: Extract the area code from a phone number
-- `extract_phone_numbers(text)`: Extract all phone numbers from a text string
-- `extract_extension(phone)`: Extract the extension from a phone number
-
-### Validator Module
-
-- `validate_phone(phone)`: Validate if a string is a valid Chinese phone number
-- `categorize_phone_format(phone)`: Categorize a phone number into different format types
-- `is_mobile_number(phone)`: Check if a phone number is a Chinese mobile number
-- `is_landline_number(phone)`: Check if a phone number is a Chinese landline number
-
-### Helper Functions
-
-- `analyze_phone_patterns(phones)`: Analyze phone number patterns in a list of phone numbers
-- `analyze_phone_dataset(df, phone_column)`: Analyze a dataset containing phone numbers
-- `get_phone_stats(df, phone_column)`: Get statistics about phone numbers in a dataset
-- `plot_phone_formats(df, phone_column)`: Create a bar chart of phone number formats
-- `plot_area_code_map(df, phone_column)`: Create a bar chart of the top area codes
-
-### Data
-
-- `area_code_to_city`: Dictionary mapping area codes to cities
-- `mobile_prefix_to_carrier`: Dictionary mapping mobile prefixes to carriers
-- `get_carrier(mobile_number)`: Get the carrier from a mobile number prefix
+# Process in chunks for large datasets
+chunk_size = 10000
+for chunk in pd.read_csv('large_dataset.csv', chunksize=chunk_size):
+    processed_chunk = analyze_phone_dataset(chunk, phone_column='phone')
+    # Save or process each chunk
+    # ...
+``` 

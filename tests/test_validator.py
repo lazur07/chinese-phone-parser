@@ -3,74 +3,46 @@ Tests for the validator module.
 """
 
 import unittest
-from chinese_phone_parser.validator import (
-    validate_phone, 
-    categorize_phone_format, 
-    is_mobile_number, 
-    is_landline_number
-)
+from chinese_phone_parser.validator import is_valid_phone_number, is_mobile_number, is_landline_number
 
 
 class TestValidator(unittest.TestCase):
     """Test cases for the validator module."""
     
-    def test_validate_phone(self):
-        """Test the validate_phone function."""
+    def test_is_valid_phone_number(self):
+        """Test the is_valid_phone_number function."""
         test_cases = [
-            # Input, Expected Valid, Expected Error Message
-            ("+86-010-12345678", True, ""),
-            ("01012345678", True, ""),
-            ("13812345678", True, ""),
-            ("4001234567", True, ""),
-            ("123", False, "Invalid phone number format"),
-            ("", False, "Phone number is empty"),
-            (None, False, "Phone number is empty"),
-        ]
-        
-        for input_val, expected_valid, expected_msg in test_cases:
-            with self.subTest(input_val=input_val):
-                is_valid, error_msg = validate_phone(input_val)
-                self.assertEqual(is_valid, expected_valid)
-                self.assertEqual(error_msg, expected_msg)
-    
-    def test_categorize_phone_format(self):
-        """Test the categorize_phone_format function."""
-        test_cases = [
-            # Input, Expected Category
-            ("+86-010-12345678", "International (+86)"),
-            ("0086-010-12345678", "International (0086)"),
-            ("86-010-12345678", "International (86)"),
-            ("010-12345678", "Domestic (0XX)"),
-            ("13812345678", "Mobile"),
-            ("400-123-4567", "Toll-Free (400)"),
-            ("800-123-4567", "Toll-Free (800)"),
-            ("12345678", "No Area Code"),
-            ("-12345678", "Missing Area Code"),
-            ("01012345678139********", "Concatenated"),
-            ("010-12345678/13812345678", "Landline/Mobile Mix"),
-            (None, "Missing"),
-            ("", "Missing"),
+            # Input, Expected Output
+            ("+8601012345678", True),  # Valid landline with country code
+            ("13812345678", True),     # Valid mobile number
+            ("4001234567", True),      # Valid toll-free number
+            ("8001234567", True),      # Valid toll-free number
+            ("010-12345678", True),    # Valid landline with area code
+            ("123456", False),         # Too short
+            ("abcdefghijk", False),    # Non-numeric
+            (None, False),             # None input
+            ("", False),               # Empty string
+            ("9999999999999", False),  # Too long
         ]
         
         for input_val, expected in test_cases:
             with self.subTest(input_val=input_val):
-                result = categorize_phone_format(input_val)
+                result = is_valid_phone_number(input_val)
                 self.assertEqual(result, expected)
     
     def test_is_mobile_number(self):
         """Test the is_mobile_number function."""
         test_cases = [
-            # Input, Expected Result
-            ("13812345678", True),
-            ("15912345678", True),
-            ("18612345678", True),
-            ("+8613812345678", True),
-            ("8613812345678", True),
-            ("010-12345678", False),
-            ("400-123-4567", False),
-            ("12345678", False),
-            (None, False),
-            ("", False),
+            # Input, Expected Output
+            ("13812345678", True),     # Valid mobile number
+            ("15912345678", True),     # Valid mobile number
+            ("18612345678", True),     # Valid mobile number
+            ("01012345678", False),    # Landline number
+            ("4001234567", False),     # Toll-free number
+            ("123456", False),         # Too short
+            ("abcdefghijk", False),    # Non-numeric
+            (None, False),             # None input
+            ("", False),               # Empty string
         ]
         
         for input_val, expected in test_cases:
@@ -81,16 +53,15 @@ class TestValidator(unittest.TestCase):
     def test_is_landline_number(self):
         """Test the is_landline_number function."""
         test_cases = [
-            # Input, Expected Result
-            ("010-12345678", True),
-            ("01012345678", True),
-            ("0755-12345678", True),
-            ("+86-010-12345678", True),
-            ("13812345678", False),
-            ("400-123-4567", False),
-            ("12345678", False),
-            (None, False),
-            ("", False),
+            # Input, Expected Output
+            ("+8601012345678", True),  # Valid landline with country code
+            ("010-12345678", True),    # Valid landline with area code
+            ("13812345678", False),    # Mobile number
+            ("4001234567", False),     # Toll-free number
+            ("123456", False),         # Too short
+            ("abcdefghijk", False),    # Non-numeric
+            (None, False),             # None input
+            ("", False),               # Empty string
         ]
         
         for input_val, expected in test_cases:

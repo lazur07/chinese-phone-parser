@@ -1,4 +1,4 @@
- """
+"""
 Functions for extracting phone numbers and their components from strings.
 """
 
@@ -7,8 +7,7 @@ from typing import Optional, List, Dict, Any, Union
 
 
 def extract_area_code(phone: Optional[str]) -> Optional[str]:
-    """
-    Extract the area code from a phone number.
+    """Extract the area code from a phone number.
     
     Parameters
     ----------
@@ -23,14 +22,17 @@ def extract_area_code(phone: Optional[str]) -> Optional[str]:
     if not phone:
         return None
     
+    # Remove any non-digit characters except +
+    phone = re.sub(r'[^\d+]', '', phone)
+    
     # Handle international format with +86
     if phone.startswith('+86'):
         phone = phone[3:]  # Remove +86
-        
+    
     # Handle international format with 0086
     if phone.startswith('0086'):
         phone = phone[4:]  # Remove 0086
-        
+    
     # Handle 86 prefix without + sign
     if phone.startswith('86'):
         phone = phone[2:]  # Remove 86
@@ -48,23 +50,19 @@ def extract_area_code(phone: Optional[str]) -> Optional[str]:
         # Special cases for major cities with 2-digit area codes
         if phone.startswith('010') or phone.startswith('020'):
             return phone[:3]
-            
+        
         # For other cities, area codes are usually 3-4 digits
-        match = re.search(r'^0(\d{2,4})', phone)
-        if match:
-            # Check for common patterns
-            if phone[:3] in ['010', '020', '021', '022', '023', '024', '025', '027', '028', '029']:
-                return phone[:3]  # Major cities with 3-digit codes
-            elif phone.startswith('0'):
-                # Other cities with 4-digit area codes
-                return phone[:4] if len(phone) >= 4 else None
+        if phone[:3] in ['010', '020', '021', '022', '023', '024', '025', '027', '028', '029']:
+            return phone[:3]  # Major cities with 3-digit codes
+        elif phone.startswith('0'):
+            # Other cities with 4-digit area codes
+            return phone[:4] if len(phone) >= 4 else None
     
     return None
 
 
 def extract_phone_numbers(text: str) -> List[str]:
-    """
-    Extract all phone numbers from a text string.
+    """Extract all phone numbers from a text string.
     
     Parameters
     ----------
@@ -81,43 +79,50 @@ def extract_phone_numbers(text: str) -> List[str]:
     
     # Define patterns for different types of phone numbers
     patterns = [
-        # International format with +86
-        r'\+86[-\s]?(\d{2,4})[-\s]?(\d{7,8})',
-        # International format with 0086
-        r'0086[-\s]?(\d{2,4})[-\s]?(\d{7,8})',
+        # International format with +86 or 0086 for landlines (with city code)
+        r'(?:(?:\+86|0086)[-\s]?)(?:(?:(?!1[3-9])\d{2,4})[-\s]?\d{7,8})',
+        # International format with +86 or 0086 for mobile
+        r'(?:(?:\+86|0086)[-\s]?)(?:1[3-9]\d{1,2}[-\s]?\d{4}[-\s]?\d{4})',
         # Mobile numbers (11 digits starting with 1)
-        r'1\d{10}',
-        # Landline with area code
-        r'0\d{2,4}[-\s]?\d{7,8}',
+        r'(?<!\d)(?<![\+\d])1[3-9]\d{9}(?!\d)',
+        # Landline with area code (with or without hyphens)
+        r'(?<!\d)(?<![\+\d])0\d{2,3}[-\s]?\d{7,8}(?!\d)',
         # Toll-free numbers
-        r'[48]00[-\s]?\d{3}[-\s]?\d{4}',
-        # Fallback for digits-only strings of right length
-        r'\b\d{7,12}\b'
+        r'(?<!\d)(?<![\+\d])[48]00[-\s]?\d{3}[-\s]?\d{4}(?!\d)'
     ]
     
-    # Extract all matches
+    # Create a mask to track positions that have been matched
+    mask = ['0'] * len(text)
     all_matches = []
+    
+    # First process international formats
     for pattern in patterns:
-        matches = re.findall(pattern, text)
-        if matches:
-            if isinstance(matches[0], tuple):
-                # If the pattern has capturing groups, join them
-                for match in matches:
-                    joined = ''.join(match)
-                    if joined not in all_matches:
-                        all_matches.append(joined)
-            else:
-                # Otherwise add them directly
-                for match in matches:
-                    if match not in all_matches:
-                        all_matches.append(match)
+        for match in re.finditer(pattern, text):
+            # Check if this region has already been matched (using the mask)
+            region_matched = False
+            for i in range(match.start(), match.end()):
+                if i < len(mask) and mask[i] == '1':
+                    region_matched = True
+                    break
+            
+            if not region_matched:
+                phone = match.group(0)
+                # Clean the phone number for comparison
+                cleaned = re.sub(r'[-\s]', '', phone)
+                
+                # Make sure we don't duplicate numbers that differ only in formatting
+                if cleaned not in [re.sub(r'[-\s]', '', x) for x in all_matches]:
+                    all_matches.append(phone)
+                    # Mark this region as matched in the mask
+                    for i in range(match.start(), match.end()):
+                        if i < len(mask):
+                            mask[i] = '1'
     
     return all_matches
 
 
 def extract_extension(phone: str) -> Dict[str, Any]:
-    """
-    Extract the extension from a phone number.
+    """Extract the extension from a phone number.
     
     Parameters
     ----------
@@ -134,10 +139,10 @@ def extract_extension(phone: str) -> Dict[str, Any]:
     
     # Check for common extension separators
     ext_patterns = [
-        r'(.+)[\s-]转[\s-](\d+)',  # Chinese
-        r'(.+)[\s-]ext[\s-.](\d+)',  # English
-        r'(.+)[\s-]分机[\s-](\d+)',  # Chinese
-        r'(.+)[-](\d{1,5})$'  # Simple dash
+        r'(.+?)[ -]转[ -]?(\d+)',  # Chinese
+        r'(.+?)[ -]ext[ .-]?(\d+)',  # English
+        r'(.+?)[ -]分机[ -]?(\d+)',  # Chinese
+        r'(.+?)-(\d{1,5})$'  # Simple dash
     ]
     
     for pattern in ext_patterns:

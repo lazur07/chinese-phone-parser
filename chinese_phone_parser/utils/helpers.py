@@ -1,4 +1,4 @@
- """
+"""
 Helper functions for working with Chinese phone numbers.
 """
 
@@ -9,15 +9,14 @@ import plotly.graph_objects as go
 from collections import Counter
 from typing import Dict, List, Optional, Any, Union
 
-from cn_phone_parser.cleaner import clean_phone_number, normalize_phone
-from cn_phone_parser.extractor import extract_area_code
-from cn_phone_parser.validator import categorize_phone_format
-from cn_phone_parser.data.area_codes import area_code_to_city
+from chinese_phone_parser.cleaner import clean_phone_number, normalize_phone
+from chinese_phone_parser.extractor import extract_area_code
+from chinese_phone_parser.validator import is_valid_phone_number
+from chinese_phone_parser.data.area_codes import area_code_to_city
 
 
 def analyze_phone_patterns(phones: List[str]) -> Dict[str, Any]:
-    """
-    Analyze phone number patterns in a list of phone numbers.
+    """Analyze phone number patterns in a list of phone numbers.
     
     Parameters
     ----------
@@ -34,7 +33,7 @@ def analyze_phone_patterns(phones: List[str]) -> Dict[str, Any]:
     for phone in phones:
         if pd.isna(phone):
             continue
-            
+        
         phone_str = str(phone)
         
         # Count the number of digits
@@ -104,8 +103,7 @@ def analyze_phone_patterns(phones: List[str]) -> Dict[str, Any]:
 
 
 def analyze_phone_dataset(df: pd.DataFrame, phone_column: str) -> pd.DataFrame:
-    """
-    Analyze a dataset containing phone numbers.
+    """Analyze a dataset containing phone numbers.
     
     Parameters
     ----------
@@ -135,14 +133,13 @@ def analyze_phone_dataset(df: pd.DataFrame, phone_column: str) -> pd.DataFrame:
     result_df['city'] = result_df['area_code'].map(lambda x: area_code_to_city.get(x, 'Unknown') if pd.notna(x) else 'Unknown')
     
     # Categorize phone formats
-    result_df['phone_format'] = result_df['normalized_phone'].apply(categorize_phone_format)
+    result_df['phone_format'] = result_df['normalized_phone'].apply(is_valid_phone_number)
     
     return result_df
 
 
 def get_phone_stats(df: pd.DataFrame, phone_column: str) -> Dict[str, Any]:
-    """
-    Get statistics about phone numbers in a dataset.
+    """Get statistics about phone numbers in a dataset.
     
     Parameters
     ----------
@@ -188,8 +185,7 @@ def get_phone_stats(df: pd.DataFrame, phone_column: str) -> Dict[str, Any]:
 
 
 def plot_phone_formats(df: pd.DataFrame, phone_column: str, color_scheme: Dict[str, str] = None) -> go.Figure:
-    """
-    Create a bar chart of phone number formats.
+    """Create a bar chart of phone number formats.
     
     Parameters
     ----------
@@ -198,50 +194,41 @@ def plot_phone_formats(df: pd.DataFrame, phone_column: str, color_scheme: Dict[s
     phone_column : str
         The name of the column containing phone numbers
     color_scheme : dict, optional
-        Color scheme to use for the plot
+        A dictionary mapping format names to colors
         
     Returns
     -------
     plotly.graph_objects.Figure
-        The plotly figure object
+        The bar chart figure
     """
-    # Default color scheme
-    if color_scheme is None:
-        color_scheme = {
-            'primary': '#1E3765',
-            'secondary': '#4F6898',
-            'tertiary': '#8F9FBF'
-        }
-    
     # Analyze phone formats
     analyzed_df = analyze_phone_dataset(df, phone_column)
-    format_counts = analyzed_df['phone_format'].value_counts().reset_index()
-    format_counts.columns = ['format', 'count']
-    
-    # Sort by count
-    format_counts = format_counts.sort_values(by='count', ascending=False)
+    format_counts = analyzed_df['phone_format'].value_counts()
     
     # Create bar chart
     fig = px.bar(
-        format_counts, 
-        x='format', 
-        y='count',
+        x=format_counts.index,
+        y=format_counts.values,
         title='Phone Number Format Distribution',
-        color_discrete_sequence=[color_scheme['primary']]
+        labels={'x': 'Format', 'y': 'Count'}
     )
     
+    # Apply custom color scheme if provided
+    if color_scheme:
+        fig.update_traces(marker_color=[color_scheme.get(fmt, '#1f77b4') for fmt in format_counts.index])
+    
+    # Update layout
     fig.update_layout(
         xaxis_title='Format',
         yaxis_title='Count',
-        template='plotly_white'
+        showlegend=False
     )
     
     return fig
 
 
 def plot_area_code_map(df: pd.DataFrame, phone_column: str, top_n: int = 10, color_scheme: Dict[str, str] = None) -> go.Figure:
-    """
-    Create a bar chart of the top area codes.
+    """Create a bar chart of the top area codes.
     
     Parameters
     ----------

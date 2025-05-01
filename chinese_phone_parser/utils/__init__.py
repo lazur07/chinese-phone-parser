@@ -2,8 +2,8 @@
 Utility functions and constants for the Chinese phone number parser.
 """
 
-from cn_phone_parser.utils.constants import PATTERNS, DEFAULT_CONFIG, PLOT_COLORS
-from cn_phone_parser.utils.helpers import (
+from chinese_phone_parser.utils.constants import PATTERNS, DEFAULT_CONFIG, PLOT_COLORS
+from chinese_phone_parser.utils.helpers import (
     analyze_phone_patterns,
     analyze_phone_dataset,
     get_phone_stats,

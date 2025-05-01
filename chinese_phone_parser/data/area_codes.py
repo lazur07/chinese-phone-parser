@@ -1,4 +1,4 @@
- """
+"""
 Area code mappings for Chinese cities.
 """
 
@@ -217,14 +217,57 @@ area_code_to_city = {
     '800': 'Toll-Free'
 }
 
-# Add short form area codes for major cities
+# Complete mapping of short form area codes to standard area codes
 short_area_codes = {
-    '10': '010',  # Beijing
-    '21': '021',  # Shanghai
-    '20': '020',  # Guangzhou
+    # Tier 1 Cities
+    '10': '010',    # Beijing
+    '21': '021',    # Shanghai
+    '20': '020',    # Guangzhou
     '755': '0755',  # Shenzhen
+    
+    # Major Provincial Capitals and Economic Centers
+    '22': '022',    # Tianjin
+    '23': '023',    # Chongqing
+    '24': '024',    # Shenyang
+    '25': '025',    # Nanjing
+    '27': '027',    # Wuhan
+    '28': '028',    # Chengdu
+    '29': '029',    # Xi'an
+    '311': '0311',  # Shijiazhuang
+    '351': '0351',  # Taiyuan
+    '371': '0371',  # Zhengzhou
+    '411': '0411',  # Dalian
+    '431': '0431',  # Changchun
+    '451': '0451',  # Harbin
+    '471': '0471',  # Hohhot
+    '512': '0512',  # Suzhou
+    '531': '0531',  # Jinan
+    '551': '0551',  # Hefei
     '571': '0571',  # Hangzhou
-    # Add more as needed
+    '591': '0591',  # Fuzhou
+    '731': '0731',  # Changsha
+    '771': '0771',  # Nanning
+    '791': '0791',  # Nanchang
+    '851': '0851',  # Guiyang
+    '871': '0871',  # Kunming
+    '898': '0898',  # Hainan (Haikou/Sanya)
+    '931': '0931',  # Lanzhou
+    '951': '0951',  # Yinchuan
+    '971': '0971',  # Xining
+    '991': '0991',  # Urumqi
+    
+    # Other Important Economic Centers
+    '512': '0512',  # Suzhou
+    '532': '0532',  # Qingdao
+    '574': '0574',  # Ningbo
+    '592': '0592',  # Xiamen
+    '757': '0757',  # Foshan
+    '769': '0769',  # Dongguan
+    
+    # Special Administrative Regions (though they use different systems)
+    '852': '00852',  # Hong Kong (international format)
+    '853': '00853',  # Macau (international format)
+    '886': '00886',  # Taiwan (international format)
 }
 
 # Map of mobile number prefixes to carriers
